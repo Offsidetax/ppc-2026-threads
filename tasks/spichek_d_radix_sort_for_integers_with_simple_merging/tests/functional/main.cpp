@@ -10,6 +10,7 @@
 #include <tuple>
 
 #include "spichek_d_radix_sort_for_integers_with_simple_merging/common/include/common.hpp"
+#include "spichek_d_radix_sort_for_integers_with_simple_merging/omp/include/ops_omp.hpp"
 #include "spichek_d_radix_sort_for_integers_with_simple_merging/seq/include/ops_seq.hpp"
 #include "util/include/func_test_util.hpp"
 #include "util/include/util.hpp"
@@ -27,13 +28,13 @@ class SpichekDRadixSortRunFuncTests : public ppc::util::BaseRunFuncTests<InType,
     TestType params = std::get<static_cast<std::size_t>(ppc::util::GTestParamIndex::kTestParams)>(GetParam());
     int vector_size = std::get<0>(params);
 
-    input_data.resize(vector_size);
+    input_data_.resize(vector_size);
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<int> dist(-10000, 10000);
 
     for (int i = 0; i < vector_size; ++i) {
-      input_data[i] = dist(gen);
+      input_data_[i] = dist(gen);
     }
   }
 
@@ -42,37 +43,37 @@ class SpichekDRadixSortRunFuncTests : public ppc::util::BaseRunFuncTests<InType,
   }
 
   InType GetTestInputData() final {
-    return input_data;
+    return input_data_;
   }
 
-  InType input_data;
+  InType input_data_;
 };
 
 namespace {
 
-TEST_P(SpichekDRadixSortRunFuncTests, SpichekDRadixSortSequential) {
+TEST_P(SpichekDRadixSortRunFuncTests, RunSortStandard) {
   ExecuteTest(GetParam());
 }
 
-TEST_P(SpichekDRadixSortRunFuncTests, SpichekDRadixSortWithNegativeValues) {
-  for (auto &val : input_data) {
+TEST_P(SpichekDRadixSortRunFuncTests, RunSortWithNegativeValues) {
+  for (auto &val : input_data_) {
     val = -std::abs(val);
   }
   ExecuteTest(GetParam());
 }
 
-TEST_P(SpichekDRadixSortRunFuncTests, SpichekDRadixSortWithAllSameValues) {
-  std::ranges::fill(input_data, 42);
+TEST_P(SpichekDRadixSortRunFuncTests, RunSortWithAllSameValues) {
+  std::ranges::fill(input_data_, 42);
   ExecuteTest(GetParam());
 }
 
-TEST_P(SpichekDRadixSortRunFuncTests, SpichekDRadixSortWithSortedInput) {
-  std::ranges::sort(input_data);
+TEST_P(SpichekDRadixSortRunFuncTests, RunSortWithSortedInput) {
+  std::ranges::sort(input_data_);
   ExecuteTest(GetParam());
 }
 
-TEST_P(SpichekDRadixSortRunFuncTests, SpichekDRadixSortWithReversedInput) {
-  std::ranges::sort(input_data, std::greater<>{});
+TEST_P(SpichekDRadixSortRunFuncTests, RunSortWithReversedInput) {
+  std::ranges::sort(input_data_, std::greater<>{});
   ExecuteTest(GetParam());
 }
 
@@ -80,8 +81,11 @@ const std::array<TestType, 3> kTestParam = {std::make_tuple(100, "small_vector")
                                             std::make_tuple(1000, "medium_vector"),
                                             std::make_tuple(5000, "large_vector")};
 
-const auto kTestTasksList = std::tuple_cat(ppc::util::AddFuncTask<SpichekDRadixSortSEQ, InType>(
-    kTestParam, PPC_SETTINGS_spichek_d_radix_sort_for_integers_with_simple_merging));
+const auto kTestTasksList =
+    std::tuple_cat(ppc::util::AddFuncTask<SpichekDRadixSortSEQ, InType>(
+                       kTestParam, PPC_SETTINGS_spichek_d_radix_sort_for_integers_with_simple_merging),
+                   ppc::util::AddFuncTask<SpichekDRadixSortOMP, InType>(
+                       kTestParam, PPC_SETTINGS_spichek_d_radix_sort_for_integers_with_simple_merging));
 
 const auto kGtestValues = ppc::util::ExpandToValues(kTestTasksList);
 
