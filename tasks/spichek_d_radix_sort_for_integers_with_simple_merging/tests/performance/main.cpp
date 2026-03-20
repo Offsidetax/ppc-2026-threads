@@ -14,13 +14,14 @@ class SpichekDRadixSortPerfTests : public ppc::util::BaseRunPerfTests<InType, Ou
  protected:
   void SetUp() override {
     const int vector_size = 5'000'000;
-    input_data_.resize(vector_size);
+    input_data.resize(vector_size);
 
-    std::mt19937 gen(1488);
+    std::random_device rd;
+    std::mt19937 gen(rd());
     std::uniform_int_distribution<int> dist(-100000, 100000);
 
     for (int i = 0; i < vector_size; ++i) {
-      input_data_[i] = dist(gen);
+      input_data[i] = dist(gen);
     }
   }
 
@@ -29,10 +30,10 @@ class SpichekDRadixSortPerfTests : public ppc::util::BaseRunPerfTests<InType, Ou
   }
 
   InType GetTestInputData() final {
-    return input_data_;
+    return input_data;
   }
 
-  InType input_data_;
+  InType input_data;
 };
 
 TEST_P(SpichekDRadixSortPerfTests, RunPerfModes) {

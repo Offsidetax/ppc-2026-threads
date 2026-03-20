@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <iterator>
+#include <utility>
 #include <vector>
 
 #include "spichek_d_radix_sort_for_integers_with_simple_merging/common/include/common.hpp"
@@ -53,7 +54,7 @@ bool SpichekDRadixSortOMP::RunImpl() {
     local_data[i] = std::vector<int>(GetOutput().begin() + displs[i], GetOutput().begin() + displs[i] + counts[i]);
   }
 
-#pragma omp parallel for num_threads(num_threads)
+#pragma omp parallel for num_threads(num_threads) default(none) shared(local_data)
   for (int i = 0; i < num_threads; ++i) {
     RadixSort(local_data[i]);
   }
